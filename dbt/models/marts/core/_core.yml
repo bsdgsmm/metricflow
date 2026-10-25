@@ -1,0 +1,119 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: >
+      Calendar dimension covering every day of each year that contains orders.
+      Grain: one row per calendar day.
+    columns:
+      - name: date_day
+        data_tests: [unique, not_null]
+      - name: year_month_label
+        description: Month label in YYYY-MM format.
+
+  - name: dim_customers
+    description: >
+      Customer dimension (SCD Type 1: attributes are overwritten by later loads).
+      Grain: one row per customer.
+    columns:
+      - name: customer_key
+        description: Surrogate key, md5 of customer_id.
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests: [unique, not_null]
+      - name: first_order_date
+        description: Date of the first non-cancelled order; null if the customer never ordered.
+      - name: first_order_month
+        description: Acquisition cohort, the month of the first non-cancelled order.
+      - name: has_ordered
+        data_tests: [not_null]
+
+  - name: dim_products
+    description: >
+      Product dimension tracked as SCD Type 2 on list price and unit cost. Each price version is
+      a separate row valid from `valid_from` (inclusive) to `valid_to` (exclusive, null when
+      current). Grain: one row per product and price version.
+    columns:
+      - name: product_key
+        description: Surrogate key of the product version.
+        data_tests: [unique, not_null]
+      - name: product_id
+        description: Natural key of the product; repeated across versions.
+        data_tests: [not_null]
+      - name: is_current
+        data_tests: [not_null]
+      - name: unit_margin
+        description: List price minus unit cost for this version.
+
+  - name: fct_order_items
+    description: >
+      Order line fact table. Grain: one row per order line, including lines of cancelled orders
+      (filter on `is_cancelled` for revenue reporting). Measures are additive.
+    columns:
+      - name: order_item_id
+        data_tests: [unique, not_null]
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fct_orders')
+                field: order_id
+      - name: customer_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_key
+      - name: product_key
+        description: Product version valid on the order date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_products')
+                field: product_key
+      - name: order_date
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: gross_revenue
+        description: Quantity multiplied by the unit price charged.
+      - name: net_sales
+        description: Gross revenue minus discounts.
+      - name: net_revenue
+        description: Net sales minus refunds.
+      - name: cost_of_goods_sold
+        description: Unit cost of the valid product version multiplied by units not returned.
+      - name: gross_profit
+        description: Net revenue minus cost of goods sold.
+
+  - name: fct_orders
+    description: >
+      Order fact table with measures aggregated from order lines. Grain: one row per order,
+      including cancelled orders.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_key
+      - name: order_date
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: customer_order_number
+        description: Position of the order in the customer's non-cancelled order history; null for cancelled orders.
+      - name: is_first_order
+        data_tests: [not_null]
