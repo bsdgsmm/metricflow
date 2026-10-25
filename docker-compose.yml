@@ -1,0 +1,56 @@
+name: metricflow
+
+x-app-environment: &app-environment
+  METRICFLOW_DB_HOST: db
+  METRICFLOW_DB_PORT: "5432"
+  METRICFLOW_DB_NAME: ${METRICFLOW_DB_NAME:-metricflow}
+  METRICFLOW_DB_USER: ${METRICFLOW_DB_USER:-metricflow}
+  METRICFLOW_DB_PASSWORD: ${METRICFLOW_DB_PASSWORD:?Set METRICFLOW_DB_PASSWORD in .env}
+  METRICFLOW_RAW_SCHEMA: ${METRICFLOW_RAW_SCHEMA:-raw}
+  METRICFLOW_DATA_DIR: data/sample
+  METRICFLOW_LOG_LEVEL: ${METRICFLOW_LOG_LEVEL:-INFO}
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${METRICFLOW_DB_NAME:-metricflow}
+      POSTGRES_USER: ${METRICFLOW_DB_USER:-metricflow}
+      POSTGRES_PASSWORD: ${METRICFLOW_DB_PASSWORD:?Set METRICFLOW_DB_PASSWORD in .env}
+    ports:
+      - "${METRICFLOW_DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  pipeline:
+    image: metricflow-app:local
+    build: .
+    environment: *app-environment
+    command:
+      - sh
+      - -c
+      - python -m metricflow_platform ingest && python -m metricflow_platform dbt build
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  dashboard:
+    image: metricflow-app:local
+    build: .
+    environment: *app-environment
+    ports:
+      - "8501:8501"
+    depends_on:
+      db:
+        condition: service_healthy
+      pipeline:
+        condition: service_completed_successfully
+
+volumes:
+  pgdata:
