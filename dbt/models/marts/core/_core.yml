@@ -83,12 +83,18 @@ models:
                 field: date_day
       - name: gross_revenue
         description: Quantity multiplied by the unit price charged.
+        data_tests: [not_null, non_negative]
       - name: net_sales
         description: Gross revenue minus discounts.
+        data_tests: [not_null, non_negative]
+      - name: refund_amount
+        data_tests: [not_null, non_negative]
       - name: net_revenue
         description: Net sales minus refunds.
+        data_tests: [not_null, non_negative]
       - name: cost_of_goods_sold
         description: Unit cost of the valid product version multiplied by units not returned.
+        data_tests: [not_null, non_negative]
       - name: gross_profit
         description: Net revenue minus cost of goods sold.
 
