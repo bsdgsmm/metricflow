@@ -69,7 +69,8 @@ erDiagram
 | `fct_orders` | One row per order | Line measures aggregated per order plus order attributes and the customer's order sequence number. |
 
 Both fact tables keep cancelled orders and flag them with `is_cancelled`; every revenue metric
-filters them out. All monetary measures are additive, so any
+filters them out. `fct_orders.is_completed_sale` additionally excludes orders whose lines were
+all rejected during ingestion, so such orders are not counted as zero-value sales. All monetary measures are additive, so any
 aggregate can be rebuilt from the line-level fact.
 
 | Measure | Definition |
