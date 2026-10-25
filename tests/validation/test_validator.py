@@ -3,10 +3,10 @@ from decimal import Decimal
 
 import pytest
 
-from metricflow.config import PROJECT_ROOT
-from metricflow.validation import SOURCE_TABLES, read_source_file, validate_source
-from metricflow.validation.csv_reader import MalformedRow, RawRow, SourceFile
-from metricflow.validation.schemas import ORDER_ITEMS, ORDERS
+from metricflow_platform.config import PROJECT_ROOT
+from metricflow_platform.validation import SOURCE_TABLES, read_source_file, validate_source
+from metricflow_platform.validation.csv_reader import MalformedRow, RawRow, SourceFile
+from metricflow_platform.validation.schemas import ORDER_ITEMS, ORDERS
 
 ORDER = {
     "order_id": "O1",

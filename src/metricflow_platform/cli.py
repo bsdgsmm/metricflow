@@ -7,11 +7,11 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from metricflow.config import PROJECT_ROOT, load_settings
-from metricflow.logging_config import configure_logging
-from metricflow.sample_data import DEFAULT_SEED, generate_dataset, write_dataset
+from metricflow_platform.config import PROJECT_ROOT, load_settings
+from metricflow_platform.logging_config import configure_logging
+from metricflow_platform.sample_data import DEFAULT_SEED, generate_dataset, write_dataset
 
-logger = logging.getLogger("metricflow.cli")
+logger = logging.getLogger("metricflow_platform.cli")
 
 
 def _generate_sample_data(args: argparse.Namespace) -> int:
@@ -21,7 +21,7 @@ def _generate_sample_data(args: argparse.Namespace) -> int:
 
 
 def _init_db(args: argparse.Namespace) -> int:
-    from metricflow.database import connect, ensure_schema
+    from metricflow_platform.database import connect, ensure_schema
 
     settings = load_settings()
     with connect(settings.database, attempts=10) as conn:
@@ -30,14 +30,16 @@ def _init_db(args: argparse.Namespace) -> int:
 
 
 def _ingest(args: argparse.Namespace) -> int:
-    from metricflow.ingestion import run_ingestion
+    from metricflow_platform.ingestion import run_ingestion
 
     run_ingestion(load_settings(), data_dir=args.data_dir)
     return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="metricflow", description="MetricFlow pipeline commands")
+    parser = argparse.ArgumentParser(
+        prog="metricflow_platform", description="MetricFlow pipeline commands"
+    )
     parser.add_argument("--log-level", default=None, help="Override METRICFLOW_LOG_LEVEL")
     subcommands = parser.add_subparsers(dest="command", required=True)
 

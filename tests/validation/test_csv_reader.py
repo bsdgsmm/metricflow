@@ -2,8 +2,8 @@ import logging
 
 import pytest
 
-from metricflow.validation.csv_reader import SourceSchemaError, read_source_file
-from metricflow.validation.schemas import RETURNS
+from metricflow_platform.validation.csv_reader import SourceSchemaError, read_source_file
+from metricflow_platform.validation.schemas import RETURNS
 
 
 def write(path, text):

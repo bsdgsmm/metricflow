@@ -11,10 +11,10 @@ from uuid import UUID, uuid4
 import psycopg
 from psycopg import sql
 
-from metricflow.config import Settings
-from metricflow.database import connect, ensure_schema
-from metricflow.ingestion.loader import existing_keys, replace_rejections, upsert_rows
-from metricflow.validation import (
+from metricflow_platform.config import Settings
+from metricflow_platform.database import connect, ensure_schema
+from metricflow_platform.ingestion.loader import existing_keys, replace_rejections, upsert_rows
+from metricflow_platform.validation import (
     SOURCE_TABLES,
     Rejection,
     TableSpec,

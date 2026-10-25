@@ -2,8 +2,8 @@ from datetime import date
 
 import pytest
 
-from metricflow.config import PROJECT_ROOT
-from metricflow.sample_data import (
+from metricflow_platform.config import PROJECT_ROOT
+from metricflow_platform.sample_data import (
     PERIOD_END,
     SCHEMAS,
     generate_dataset,
@@ -97,7 +97,7 @@ def test_price_history_keeps_cost_below_price(dataset):
 
 
 def test_cli_writes_all_tables(tmp_path):
-    from metricflow.cli import main
+    from metricflow_platform.cli import main
 
     assert main(["generate-sample-data", "--seed", "3", "--output-dir", str(tmp_path)]) == 0
     assert sorted(p.stem for p in tmp_path.glob("*.csv")) == sorted(SCHEMAS)

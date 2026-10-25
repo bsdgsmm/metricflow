@@ -4,9 +4,9 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any
 
-from metricflow.validation.csv_reader import SourceFile
-from metricflow.validation.parsers import ParseError, parse_value
-from metricflow.validation.schemas import TableSpec
+from metricflow_platform.validation.csv_reader import SourceFile
+from metricflow_platform.validation.parsers import ParseError, parse_value
+from metricflow_platform.validation.schemas import TableSpec
 
 
 @dataclass(frozen=True)

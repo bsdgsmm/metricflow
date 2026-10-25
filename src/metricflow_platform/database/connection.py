@@ -5,7 +5,7 @@ import time
 
 import psycopg
 
-from metricflow.config import DatabaseSettings
+from metricflow_platform.config import DatabaseSettings
 
 logger = logging.getLogger(__name__)
 

@@ -3,7 +3,7 @@ import csv
 import pytest
 from psycopg import sql
 
-from metricflow.ingestion import IngestionError, run_ingestion
+from metricflow_platform.ingestion import IngestionError, run_ingestion
 
 pytestmark = pytest.mark.integration
 
