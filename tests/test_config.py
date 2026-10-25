@@ -49,3 +49,10 @@ def test_absolute_data_dir_is_kept(tmp_path):
     settings = load_settings({**BASE_ENV, "METRICFLOW_DATA_DIR": str(tmp_path)})
 
     assert settings.data_dir == tmp_path
+
+
+def test_raw_schema_defaults_and_validates():
+    assert load_settings(BASE_ENV).raw_schema == "raw"
+    assert load_settings({**BASE_ENV, "METRICFLOW_RAW_SCHEMA": "raw_test"}).raw_schema == "raw_test"
+    with pytest.raises(ConfigurationError, match="identifier"):
+        load_settings({**BASE_ENV, "METRICFLOW_RAW_SCHEMA": "raw; drop table x"})

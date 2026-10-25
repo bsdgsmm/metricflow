@@ -38,7 +38,8 @@ def test_valid_row_is_parsed_to_typed_values():
     result = validate_source(source(ITEM), ORDER_ITEMS)
 
     assert result.rejections == []
-    assert result.rows == [
+    assert [row.row_number for row in result.rows] == [2]
+    assert [row.values for row in result.rows] == [
         {
             "order_item_id": "OI1",
             "order_id": "O1",
@@ -53,8 +54,8 @@ def test_valid_row_is_parsed_to_typed_values():
 def test_values_are_trimmed_before_validation():
     result = validate_source(source({**ITEM, "quantity": " 3 ", "order_id": " O1 "}), ORDER_ITEMS)
 
-    assert result.rows[0]["quantity"] == 3
-    assert result.rows[0]["order_id"] == "O1"
+    assert result.rows[0].values["quantity"] == 3
+    assert result.rows[0].values["order_id"] == "O1"
 
 
 @pytest.mark.parametrize(
@@ -103,7 +104,7 @@ def test_conflicting_duplicates_reject_every_occurrence():
     other = {"order_item_id": "OI2", **{k: v for k, v in ITEM.items() if k != "order_item_id"}}
     result = validate_source(source(ITEM, other, {**ITEM, "quantity": "5"}), ORDER_ITEMS)
 
-    assert [row["order_item_id"] for row in result.rows] == ["OI2"]
+    assert [row.values["order_item_id"] for row in result.rows] == ["OI2"]
     assert [(r.row_number, r.reason) for r in result.rejections] == [
         (2, "conflicting_duplicate_key"),
         (4, "conflicting_duplicate_key"),
