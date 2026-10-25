@@ -9,7 +9,11 @@ models:
         data_tests: [unique, not_null]
       - name: signup_date
         description: Date the customer registered.
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - between:
+              arguments:
+                max_value: current_date
       - name: country
         data_tests: [not_null]
       - name: city
@@ -39,7 +43,11 @@ models:
                   - Sports & Outdoors
                   - Books
       - name: launched_on
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - not_after_column:
+              arguments:
+                other_column: discontinued_on
       - name: is_active
         description: True when the product has no discontinuation date.
 
@@ -58,9 +66,18 @@ models:
       - name: valid_from
         data_tests: [not_null]
       - name: list_price
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - between:
+              arguments:
+                min_value: 0.01
       - name: unit_cost
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - non_negative
+          - not_after_column:
+              arguments:
+                other_column: list_price
 
   - name: stg_orders
     description: "Order headers. Grain: one row per order."
@@ -79,7 +96,11 @@ models:
         data_tests: [not_null]
       - name: order_date
         description: Calendar date of the order in UTC.
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - between:
+              arguments:
+                max_value: current_date
       - name: order_status
         data_tests:
           - accepted_values:
@@ -111,7 +132,20 @@ models:
                 to: ref('stg_products')
                 field: product_id
       - name: quantity
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - between:
+              arguments:
+                min_value: 1
+      - name: unit_price
+        data_tests: [not_null, non_negative]
+      - name: discount_amount
+        data_tests:
+          - not_null
+          - non_negative
+          - not_after_column:
+              arguments:
+                other_column: gross_amount
       - name: gross_amount
         description: Quantity multiplied by the unit price charged, before discounts.
 
@@ -128,9 +162,19 @@ models:
                 to: ref('stg_order_items')
                 field: order_item_id
       - name: returned_on
-        data_tests: [not_null]
+        data_tests:
+          - not_null
+          - between:
+              arguments:
+                max_value: current_date
+      - name: returned_quantity
+        data_tests:
+          - not_null
+          - between:
+              arguments:
+                min_value: 1
       - name: refund_amount
-        data_tests: [not_null]
+        data_tests: [not_null, non_negative]
 
 unit_tests:
   - name: order_date_is_derived_in_utc

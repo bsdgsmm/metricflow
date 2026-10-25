@@ -10,7 +10,8 @@ models:
       - name: month_start
         data_tests: [unique, not_null]
       - name: orders
-        description: Number of non-cancelled orders placed in the month.
+        description: Number of completed sales placed in the month.
+        data_tests: [not_null, non_negative]
       - name: active_customers
         description: Distinct customers with at least one non-cancelled order in the month.
       - name: new_customers
@@ -46,6 +47,11 @@ models:
         data_tests: [unique, not_null]
       - name: return_rate
         description: Returned units divided by units sold.
+        data_tests:
+          - between:
+              arguments:
+                min_value: 0
+                max_value: 1
       - name: sales_trend
         description: >
           declining if recent-window net revenue is more than 20% below the prior window,
@@ -73,6 +79,7 @@ models:
                 values: [no_orders, one_time, repeat, loyal]
       - name: lifetime_net_revenue
         description: Historical customer lifetime value, the sum of net revenue to the end of the data.
+        data_tests: [not_null, non_negative]
       - name: lifetime_value_quartile
         description: Quartile of lifetime net revenue among customers with orders (4 = highest).
       - name: net_revenue_first_365d
@@ -92,3 +99,9 @@ models:
     columns:
       - name: retention_rate
         description: active_customers / cohort_size.
+        data_tests:
+          - not_null
+          - between:
+              arguments:
+                min_value: 0
+                max_value: 1
