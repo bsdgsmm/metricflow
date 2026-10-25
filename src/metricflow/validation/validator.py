@@ -17,10 +17,16 @@ class Rejection:
     payload: dict[str, str]
 
 
+@dataclass(frozen=True)
+class ValidRow:
+    row_number: int
+    values: dict[str, Any]
+
+
 @dataclass
 class ValidationResult:
     table: str
-    rows: list[dict[str, Any]] = field(default_factory=list)
+    rows: list[ValidRow] = field(default_factory=list)
     rejections: list[Rejection] = field(default_factory=list)
     duplicates_removed: int = 0
 
@@ -91,7 +97,8 @@ def validate_source(source: SourceFile, spec: TableSpec) -> ValidationResult:
     for key, occurrences in candidates.items():
         distinct = {tuple(parsed.values()) for _, parsed, _ in occurrences}
         if len(distinct) == 1:
-            result.rows.append(occurrences[0][1])
+            row_number, parsed, _ = occurrences[0]
+            result.rows.append(ValidRow(row_number, parsed))
             result.duplicates_removed += len(occurrences) - 1
             continue
         for row_number, _, raw_values in occurrences:
