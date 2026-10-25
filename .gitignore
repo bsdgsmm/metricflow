@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment and credentials
+.env
+dbt/profiles.yml
+
+# dbt artifacts
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+logs/
+
+# Local data drops and database volumes
+data/raw/
+pgdata/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
