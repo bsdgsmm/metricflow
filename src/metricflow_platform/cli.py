@@ -36,6 +36,18 @@ def _ingest(args: argparse.Namespace) -> int:
     return 0
 
 
+def _dbt(args: argparse.Namespace) -> int:
+    from dbt.cli.main import dbtRunner
+
+    settings = load_settings()
+    os.environ.setdefault("METRICFLOW_RAW_SCHEMA", settings.raw_schema)
+    dbt_dir = str(PROJECT_ROOT / "dbt")
+    result = dbtRunner().invoke(
+        [*args.dbt_args, "--project-dir", dbt_dir, "--profiles-dir", dbt_dir]
+    )
+    return 0 if result.success else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="metricflow_platform", description="MetricFlow pipeline commands"
@@ -58,6 +70,13 @@ def build_parser() -> argparse.ArgumentParser:
     ingest = subcommands.add_parser("ingest", help="Validate source files and load them")
     ingest.add_argument("--data-dir", type=Path, default=None, help="Override METRICFLOW_DATA_DIR")
     ingest.set_defaults(handler=_ingest)
+
+    dbt = subcommands.add_parser(
+        "dbt",
+        help="Run dbt against the project with settings from .env, e.g. `metricflow dbt build`",
+    )
+    dbt.add_argument("dbt_args", nargs=argparse.REMAINDER, help="Arguments passed to dbt")
+    dbt.set_defaults(handler=_dbt)
     return parser
 
 

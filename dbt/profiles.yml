@@ -1,0 +1,14 @@
+# Connection settings are read from the same environment variables as the Python pipeline.
+# This file contains no credentials and is safe to commit.
+metricflow:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('METRICFLOW_DB_HOST', 'localhost') }}"
+      port: "{{ env_var('METRICFLOW_DB_PORT', '5432') | as_number }}"
+      dbname: "{{ env_var('METRICFLOW_DB_NAME') }}"
+      user: "{{ env_var('METRICFLOW_DB_USER') }}"
+      password: "{{ env_var('METRICFLOW_DB_PASSWORD', '') }}"
+      schema: analytics
+      threads: 4
