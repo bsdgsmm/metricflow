@@ -1,0 +1,157 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: "Customers with standardised text attributes. Grain: one row per customer."
+    columns:
+      - name: customer_id
+        description: Natural key of the customer.
+        data_tests: [unique, not_null]
+      - name: signup_date
+        description: Date the customer registered.
+        data_tests: [not_null]
+      - name: country
+        data_tests: [not_null]
+      - name: city
+        data_tests: [not_null]
+      - name: acquisition_channel
+        description: Marketing channel that acquired the customer, lower case.
+        data_tests: [not_null]
+      - name: is_marketing_opt_in
+        description: Whether the customer agreed to receive marketing communication.
+        data_tests: [not_null]
+
+  - name: stg_products
+    description: "Product catalogue attributes. Grain: one row per product."
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+      - name: category
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - Electronics
+                  - Home & Kitchen
+                  - Apparel
+                  - Beauty
+                  - Sports & Outdoors
+                  - Books
+      - name: launched_on
+        data_tests: [not_null]
+      - name: is_active
+        description: True when the product has no discontinuation date.
+
+  - name: stg_product_prices
+    description: >
+      Product list price and unit cost versions. Grain: one row per product and `valid_from` date.
+      A version is effective from `valid_from` until the next version of the same product.
+    columns:
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+      - name: valid_from
+        data_tests: [not_null]
+      - name: list_price
+        data_tests: [not_null]
+      - name: unit_cost
+        data_tests: [not_null]
+
+  - name: stg_orders
+    description: "Order headers. Grain: one row per order."
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+      - name: ordered_at
+        description: Order timestamp with time zone.
+        data_tests: [not_null]
+      - name: order_date
+        description: Calendar date of the order in UTC.
+        data_tests: [not_null]
+      - name: order_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [completed, cancelled]
+      - name: order_channel
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [web, mobile_app]
+
+  - name: stg_order_items
+    description: "Order lines. Grain: one row per order line."
+    columns:
+      - name: order_item_id
+        data_tests: [unique, not_null]
+      - name: order_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+      - name: quantity
+        data_tests: [not_null]
+      - name: gross_amount
+        description: Quantity multiplied by the unit price charged, before discounts.
+
+  - name: stg_returns
+    description: "Returned order lines. Grain: one row per return."
+    columns:
+      - name: return_id
+        data_tests: [unique, not_null]
+      - name: order_item_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_order_items')
+                field: order_item_id
+      - name: returned_on
+        data_tests: [not_null]
+      - name: refund_amount
+        data_tests: [not_null]
+
+unit_tests:
+  - name: order_date_is_derived_in_utc
+    description: An order placed just after midnight at a positive UTC offset belongs to the previous UTC date.
+    model: stg_orders
+    given:
+      - input: source('raw', 'orders')
+        rows:
+          - order_id: O1
+            customer_id: C1
+            order_timestamp: "2024-03-31 01:30:00+02:00"
+            status: completed
+            channel: web
+            payment_method: card
+          - order_id: O2
+            customer_id: C1
+            order_timestamp: "2024-12-31 23:59:59+00:00"
+            status: cancelled
+            channel: mobile_app
+            payment_method: paypal
+    expect:
+      rows:
+        - {order_id: O1, order_date: "2024-03-30", is_cancelled: false}
+        - {order_id: O2, order_date: "2024-12-31", is_cancelled: true}

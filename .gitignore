@@ -15,12 +15,12 @@ htmlcov/
 
 # Environment and credentials
 .env
-dbt/profiles.yml
 
 # dbt artifacts
 dbt/target/
 dbt/dbt_packages/
 dbt/logs/
+dbt/.user.yml
 logs/
 
 # Local data drops and database volumes

@@ -1,0 +1,39 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Validated source data loaded by the MetricFlow ingestion pipeline.
+    schema: "{{ env_var('METRICFLOW_RAW_SCHEMA', 'raw') }}"
+    loaded_at_field: _loaded_at
+    tables:
+      - name: customers
+        description: One row per registered customer.
+        columns:
+          - name: customer_id
+            data_tests: [unique, not_null]
+      - name: products
+        description: One row per product in the catalogue.
+        columns:
+          - name: product_id
+            data_tests: [unique, not_null]
+      - name: product_price_history
+        description: One row per product and price version, effective from `valid_from`.
+      - name: orders
+        description: One row per order header.
+        columns:
+          - name: order_id
+            data_tests: [unique, not_null]
+      - name: order_items
+        description: One row per order line.
+        columns:
+          - name: order_item_id
+            data_tests: [unique, not_null]
+      - name: returns
+        description: One row per return of an order line.
+        columns:
+          - name: return_id
+            data_tests: [unique, not_null]
+      - name: rejected_records
+        description: Rows rejected by ingestion validation in the latest run of each file.
+      - name: ingestion_runs
+        description: Audit log with one row per table load attempt.
