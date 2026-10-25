@@ -1,0 +1,94 @@
+version: 2
+
+models:
+  - name: mart_monthly_kpis
+    description: >
+      Company-level KPIs per calendar month, excluding cancelled orders. Months without orders
+      are kept with zero values. Grain: one row per month. Formulas are documented in
+      docs/metrics.md.
+    columns:
+      - name: month_start
+        data_tests: [unique, not_null]
+      - name: orders
+        description: Number of non-cancelled orders placed in the month.
+      - name: active_customers
+        description: Distinct customers with at least one non-cancelled order in the month.
+      - name: new_customers
+        description: Customers whose first non-cancelled order was placed in the month.
+      - name: average_order_value
+        description: net_sales / orders.
+      - name: gross_margin
+        description: gross_profit / net_revenue.
+      - name: net_revenue_yoy_growth
+        description: Net revenue versus the same month one year earlier; null without a prior-year month.
+
+  - name: mart_category_monthly
+    description: >
+      Revenue and profit by product category and month, excluding cancelled orders.
+      Grain: one row per month and category with sales.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "month_start || '|' || category"
+    columns:
+      - name: orders
+        description: Distinct orders containing at least one line in the category.
+      - name: share_of_month_net_revenue
+        description: Category net revenue divided by total net revenue of the month.
+
+  - name: mart_product_performance
+    description: >
+      Lifetime and recent performance per product using current catalogue attributes.
+      The recent window is the last six calendar months of data; the prior window is the six
+      months before it. Grain: one row per product.
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+      - name: return_rate
+        description: Returned units divided by units sold.
+      - name: sales_trend
+        description: >
+          declining if recent-window net revenue is more than 20% below the prior window,
+          growing if more than 20% above, stable otherwise; new when the prior window had no
+          sales and no_recent_sales when neither window did.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [declining, growing, stable, new, no_recent_sales]
+
+  - name: mart_customer_metrics
+    description: >
+      Purchase behaviour and historical lifetime value per customer, excluding cancelled
+      orders. Grain: one row per customer, including customers who never ordered.
+    columns:
+      - name: customer_key
+        data_tests: [unique, not_null]
+      - name: frequency_segment
+        description: no_orders (0), one_time (1), repeat (2-3) or loyal (4+) orders.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [no_orders, one_time, repeat, loyal]
+      - name: lifetime_net_revenue
+        description: Historical customer lifetime value, the sum of net revenue to the end of the data.
+      - name: lifetime_value_quartile
+        description: Quartile of lifetime net revenue among customers with orders (4 = highest).
+      - name: net_revenue_first_365d
+        description: Net revenue in the 365 days from the first order; null unless that year is fully observed.
+      - name: days_since_last_order
+        description: Days between the last order and the last order date in the dataset.
+
+  - name: mart_cohort_retention
+    description: >
+      Share of each first-order cohort that placed a non-cancelled order N months after the
+      cohort month. Grain: one row per cohort month and month offset, up to the last month of
+      data.
+    data_tests:
+      - unique:
+          arguments:
+            column_name: "cohort_month || '|' || months_since_first_order"
+    columns:
+      - name: retention_rate
+        description: active_customers / cohort_size.
