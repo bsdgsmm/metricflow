@@ -41,6 +41,10 @@ def _dbt(args: argparse.Namespace) -> int:
 
     settings = load_settings()
     os.environ.setdefault("METRICFLOW_RAW_SCHEMA", settings.raw_schema)
+    # dbt prints non-ASCII characters (e.g. in unit test diffs) that legacy Windows consoles
+    # cannot encode; escaping them keeps the error report from being swallowed.
+    for stream in (sys.stdout, sys.stderr):
+        stream.reconfigure(errors="backslashreplace")
     dbt_dir = str(PROJECT_ROOT / "dbt")
     result = dbtRunner().invoke(
         [*args.dbt_args, "--project-dir", dbt_dir, "--profiles-dir", dbt_dir]
