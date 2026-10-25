@@ -1,0 +1,22 @@
+select
+    order_item_id,
+    order_id,
+    md5(customer_id) as customer_key,
+    product_key,
+    order_date,
+    ordered_at,
+    is_cancelled,
+    quantity,
+    returned_quantity,
+    has_return,
+    first_returned_on,
+    unit_price,
+    unit_cost,
+    gross_revenue,
+    discount_amount,
+    net_sales,
+    refund_amount,
+    net_revenue,
+    cost_of_goods_sold,
+    gross_profit
+from {{ ref('int_order_lines_enriched') }}

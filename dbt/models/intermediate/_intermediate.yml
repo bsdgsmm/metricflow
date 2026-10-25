@@ -1,0 +1,115 @@
+version: 2
+
+models:
+  - name: int_product_versions
+    description: >
+      Product price versions combined with catalogue attributes, with explicit validity ranges
+      for SCD Type 2 lookups. Grain: one row per product and price version. `valid_to` is
+      exclusive and null for the current version.
+    columns:
+      - name: product_key
+        description: Surrogate key of the product version, md5 of product_id and valid_from.
+        data_tests: [unique, not_null]
+      - name: product_id
+        data_tests: [not_null]
+      - name: version_number
+        description: 1 for the first known price of a product, increasing with each change.
+        data_tests: [not_null]
+
+  - name: int_order_lines_enriched
+    description: >
+      Order lines joined to their order, the product version valid on the order date and
+      aggregated returns, with all line-level revenue, cost and profit measures. Grain: one row
+      per order line, including lines of cancelled orders.
+    columns:
+      - name: order_item_id
+        data_tests: [unique, not_null]
+      - name: product_key
+        description: Product version valid on the order date (UTC).
+        data_tests: [not_null]
+      - name: unit_cost
+        data_tests: [not_null]
+
+  - name: int_customer_order_sequence
+    description: >
+      Non-cancelled orders numbered per customer in chronological order. Grain: one row per
+      non-cancelled order.
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_order_number
+        data_tests: [not_null]
+
+unit_tests:
+  - name: product_versions_get_exclusive_validity_ranges
+    model: int_product_versions
+    given:
+      - input: ref('stg_product_prices')
+        rows:
+          - {product_id: P1, valid_from: "2023-01-01", list_price: 10.00, unit_cost: 6.00}
+          - {product_id: P1, valid_from: "2023-07-01", list_price: 12.00, unit_cost: 7.00}
+          - {product_id: P2, valid_from: "2024-02-01", list_price: 5.00, unit_cost: 2.00}
+      - input: ref('stg_products')
+        rows:
+          - {product_id: P1, product_name: Lamp, category: Home & Kitchen}
+          - {product_id: P2, product_name: Serum, category: Beauty}
+    expect:
+      rows:
+        - {product_id: P1, version_number: 1, valid_from: "2023-01-01", valid_to: "2023-07-01", is_current: false}
+        - {product_id: P1, version_number: 2, valid_from: "2023-07-01", valid_to: null, is_current: true}
+        - {product_id: P2, version_number: 1, valid_from: "2024-02-01", valid_to: null, is_current: true}
+
+  - name: order_lines_use_price_version_valid_on_order_date
+    description: >
+      An order placed on the day a new version starts uses the new cost; returned units reduce
+      cost of goods sold and refunds reduce net revenue.
+    model: int_order_lines_enriched
+    given:
+      - input: ref('stg_order_items')
+        rows:
+          - {order_item_id: OI1, order_id: O1, product_id: P1, quantity: 2, unit_price: 10.00, discount_amount: 2.00, gross_amount: 20.00}
+          - {order_item_id: OI2, order_id: O2, product_id: P1, quantity: 3, unit_price: 12.00, discount_amount: 0.00, gross_amount: 36.00}
+      - input: ref('stg_orders')
+        rows:
+          - {order_id: O1, customer_id: C1, order_date: "2023-06-30", is_cancelled: false}
+          - {order_id: O2, customer_id: C1, order_date: "2023-07-01", is_cancelled: false}
+      - input: ref('int_product_versions')
+        rows:
+          - {product_key: k1, product_id: P1, valid_from: "2023-01-01", valid_to: "2023-07-01", unit_cost: 6.00}
+          - {product_key: k2, product_id: P1, valid_from: "2023-07-01", valid_to: null, unit_cost: 7.00}
+      - input: ref('stg_returns')
+        rows:
+          - {return_id: R1, order_item_id: OI2, returned_on: "2023-07-10", returned_quantity: 1, refund_amount: 12.00}
+    expect:
+      rows:
+        - order_item_id: OI1
+          product_key: k1
+          net_sales: "18.00"
+          refund_amount: "0.00"
+          net_revenue: "18.00"
+          cost_of_goods_sold: "12.00"
+          gross_profit: "6.00"
+          has_return: false
+        - order_item_id: OI2
+          product_key: k2
+          net_sales: "36.00"
+          refund_amount: "12.00"
+          net_revenue: "24.00"
+          cost_of_goods_sold: "14.00"
+          gross_profit: "10.00"
+          has_return: true
+
+  - name: customer_order_sequence_skips_cancelled_orders
+    model: int_customer_order_sequence
+    given:
+      - input: ref('stg_orders')
+        rows:
+          - {order_id: O1, customer_id: C1, ordered_at: "2024-01-01 10:00:00+00", order_date: "2024-01-01", is_cancelled: false}
+          - {order_id: O2, customer_id: C1, ordered_at: "2024-01-05 10:00:00+00", order_date: "2024-01-05", is_cancelled: true}
+          - {order_id: O3, customer_id: C1, ordered_at: "2024-01-11 10:00:00+00", order_date: "2024-01-11", is_cancelled: false}
+          - {order_id: O4, customer_id: C2, ordered_at: "2024-01-02 10:00:00+00", order_date: "2024-01-02", is_cancelled: false}
+    expect:
+      rows:
+        - {order_id: O1, customer_order_number: 1, days_since_previous_order: null}
+        - {order_id: O3, customer_order_number: 2, days_since_previous_order: 10}
+        - {order_id: O4, customer_order_number: 1, days_since_previous_order: null}
