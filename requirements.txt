@@ -1,5 +1,5 @@
-dbt-core==1.10.23
-dbt-postgres==1.9.1
+dbt-core==1.12.6
+dbt-postgres==1.11.0
 pandas==3.1.0
 plotly==7.1.0
 psycopg[binary]==3.3.6

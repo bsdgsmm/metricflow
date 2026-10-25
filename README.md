@@ -22,6 +22,9 @@ raw CSV files → validated ingestion → PostgreSQL raw schema → dbt staging 
 
 Exact pinned versions live in [`requirements.txt`](requirements.txt) and [`requirements-dev.txt`](requirements-dev.txt).
 
+The Python package is named `metricflow_platform` because dbt-core 1.12 depends on dbt Labs'
+unrelated `metricflow` package, and the two would otherwise share an import name.
+
 ## Local development
 
 ```bash

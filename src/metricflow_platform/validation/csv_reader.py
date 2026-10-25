@@ -5,7 +5,7 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
-from metricflow.validation.schemas import TableSpec
+from metricflow_platform.validation.schemas import TableSpec
 
 logger = logging.getLogger(__name__)
 

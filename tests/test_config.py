@@ -1,6 +1,6 @@
 import pytest
 
-from metricflow.config import PROJECT_ROOT, ConfigurationError, load_settings
+from metricflow_platform.config import PROJECT_ROOT, ConfigurationError, load_settings
 
 BASE_ENV = {
     "METRICFLOW_DB_HOST": "db.internal",

@@ -3,8 +3,8 @@ from decimal import Decimal
 
 import pytest
 
-from metricflow.validation.parsers import ParseError, parse_value
-from metricflow.validation.schemas import ColumnType
+from metricflow_platform.validation.parsers import ParseError, parse_value
+from metricflow_platform.validation.schemas import ColumnType
 
 
 @pytest.mark.parametrize(

@@ -8,8 +8,8 @@ from uuid import UUID
 import psycopg
 from psycopg import sql
 
-from metricflow.database.schema import POSTGRES_TYPES
-from metricflow.validation import Rejection, TableSpec, ValidRow
+from metricflow_platform.database.schema import POSTGRES_TYPES
+from metricflow_platform.validation import Rejection, TableSpec, ValidRow
 
 
 @dataclass(frozen=True)

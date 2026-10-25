@@ -5,8 +5,8 @@ import uuid
 import pytest
 from psycopg import sql
 
-from metricflow.config import PROJECT_ROOT, ConfigurationError, load_settings
-from metricflow.database import DatabaseUnavailableError, connect
+from metricflow_platform.config import PROJECT_ROOT, ConfigurationError, load_settings
+from metricflow_platform.database import DatabaseUnavailableError, connect
 
 
 @pytest.fixture(scope="session")

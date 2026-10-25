@@ -7,7 +7,7 @@ import logging
 import psycopg
 from psycopg import sql
 
-from metricflow.validation.schemas import SOURCE_TABLES, ColumnType, TableSpec
+from metricflow_platform.validation.schemas import SOURCE_TABLES, ColumnType, TableSpec
 
 logger = logging.getLogger(__name__)
 

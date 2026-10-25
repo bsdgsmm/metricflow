@@ -4,7 +4,7 @@ import re
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
-from metricflow.validation.schemas import ColumnType
+from metricflow_platform.validation.schemas import ColumnType
 
 _DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _TRUE = {"true", "t", "1", "yes", "y"}
