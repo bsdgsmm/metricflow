@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+_IDENTIFIER = re.compile(r"^[a-z_][a-z0-9_]{0,62}$")
 
 
 class ConfigurationError(ValueError):
@@ -43,6 +45,7 @@ class Settings:
     database: DatabaseSettings
     data_dir: Path
     log_level: str
+    raw_schema: str = "raw"
 
 
 def _require(env: Mapping[str, str], key: str) -> str:
@@ -74,6 +77,10 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     if not data_dir.is_absolute():
         data_dir = PROJECT_ROOT / data_dir
 
+    raw_schema = env.get("METRICFLOW_RAW_SCHEMA", "raw").strip()
+    if not _IDENTIFIER.match(raw_schema):
+        raise ConfigurationError(f"METRICFLOW_RAW_SCHEMA {raw_schema!r} is not a valid identifier")
+
     return Settings(
         database=DatabaseSettings(
             host=env.get("METRICFLOW_DB_HOST", "localhost").strip(),
@@ -84,4 +91,5 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         ),
         data_dir=data_dir,
         log_level=log_level,
+        raw_schema=raw_schema,
     )
