@@ -30,6 +30,7 @@ select
     orders.ordered_at,
     orders.order_status,
     orders.is_cancelled,
+    not orders.is_cancelled and coalesce(lines.line_count, 0) > 0 as is_completed_sale,
     orders.order_channel,
     orders.payment_method,
     order_sequence.customer_order_number,

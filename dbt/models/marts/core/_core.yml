@@ -113,7 +113,12 @@ models:
               arguments:
                 to: ref('dim_date')
                 field: date_day
+      - name: is_completed_sale
+        description: >
+          True for non-cancelled orders with at least one valid order line. Order-count metrics
+          only count completed sales.
+        data_tests: [not_null]
       - name: customer_order_number
-        description: Position of the order in the customer's non-cancelled order history; null for cancelled orders.
+        description: Position of the order in the customer's completed sales; null otherwise.
       - name: is_first_order
         data_tests: [not_null]
